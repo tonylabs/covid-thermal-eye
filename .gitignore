@@ -1,5 +1,6 @@
 # Project Credentials
-Code/conf/db.py
+code/conf/db.py
+images/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
