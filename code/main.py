@@ -40,17 +40,17 @@ if __name__ == '__main__':
 
     #list_ports()
 
-    ###
+    ###Get Photo Files
     path = 'images/photos'
     images = []
-    classNames = []
-    myList = os.listdir(path)
-    print(myList)
-    for cl in myList:
-        curImg = cv2.imread(f'{path}/{cl}')
+    filenames = []
+    files = os.listdir(path)
+    #print(files)
+    for file in files:
+        curImg = cv2.imread(f'{path}/{file}')
     images.append(curImg)
-    classNames.append(os.path.splitext(cl)[0])
-    print(classNames)
+    filenames.append(os.path.splitext(file)[0])
+    #print(filenames)
 
     def findEncodings(images):
         encodeList = []
@@ -61,49 +61,42 @@ if __name__ == '__main__':
         return encodeList
 
     def markAttendance(name):
-        with open('attendance.csv', 'r+') as f:
-            myDataList = f.readlines()
-        nameList = []
-        for line in myDataList:
-            entry = line.split(',')
-        nameList.append(entry[0])
-        if name not in nameList:
-            now = datetime.now()
-        dtString = now.strftime('%H:%M:%S')
-        f.writelines(f'\n{name},{dtString}')
+
+        print(name)
 
     encodeListKnown = findEncodings(images)
-    print('Encoding Complete')
+    #print(len(encodeListKnown))
 
-    cap = cv2.VideoCapture(0)
+    objCamera = cv2.VideoCapture(0)
     while True:
-        success, img = cap.read()
-    # img = captureScreen()
-    imgS = cv2.resize(img, (0, 0), None, 0.25, 0.25)
-    imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
+        success, img = objCamera.read()
+        # img = captureScreen()
+        imgS = cv2.resize(img, (0, 0), None, 0.25, 0.25)
+        imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
 
-    facesCurFrame = face_recognition.face_locations(imgS)
-    encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
+        facesCurFrame = face_recognition.face_locations(imgS)
+        encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
 
-    for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
-        matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
-    faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
-    print(faceDis)
-    matchIndex = np.argmin(faceDis)
+        for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
+            matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
+            faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
+            #print(faceDis)
+            matchIndex = np.argmin(faceDis)
 
-    if matches[matchIndex]:
-        name = classNames[matchIndex].upper()
-    print(name)
-    y1, x2, y2, x1 = faceLoc
-    y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
-    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    cv2.rectangle(img, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
-    cv2.putText(img, name, (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
-    markAttendance(name)
-    cv2.imshow('Webcam', img)
-    cv2.waitKey(1)
+            if matches[matchIndex]:
+                name = filenames[matchIndex].upper()
+                #print(name)
+                y1, x2, y2, x1 = faceLoc
+                y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
+                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.rectangle(img, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
+                cv2.putText(img, name, (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+                markAttendance(name)
+        cv2.imshow('TONYLABS THERMAL EYE', img)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-    ###
+    '''
     try:
         conn = mysql.connector.connect(user=db.mysql["user"], password=db.mysql["password"], host=db.mysql["host"], database=db.mysql["db"])
         sql = """INSERT INTO `tlabs_user_temperature` (`user_id`, `temperature`) VALUES (1, 35.36)"""
@@ -118,9 +111,10 @@ if __name__ == '__main__':
         if (conn.is_connected()):
             conn.close()
             print("MySQL connection is closed")
-
+    '''
 
     '''
+    #Photo Comparison
     imgElon = face_recognition.load_image_file('images/elon-musk.jpg')
     imgElon = cv2.cvtColor(imgElon, cv2.COLOR_BGR2RGB)
     imgTest = face_recognition.load_image_file('images/bill-gates.jpg')
