@@ -6,6 +6,7 @@ import os
 import cv2
 import numpy as np
 import face_recognition
+import db as orm
 from datetime import datetime
 import conf.db as db
 import mysql.connector
@@ -48,29 +49,26 @@ if __name__ == '__main__':
     #print(files)
     for file in files:
         curImg = cv2.imread(f'{path}/{file}')
-    images.append(curImg)
-    filenames.append(os.path.splitext(file)[0])
+        images.append(curImg)
+        filenames.append(os.path.splitext(file)[0])
     #print(filenames)
 
     def findEncodings(images):
         encodeList = []
         for img in images:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        encode = face_recognition.face_encodings(img)[0]
-        encodeList.append(encode)
+            encode = face_recognition.face_encodings(img)[0]
+            encodeList.append(encode)
         return encodeList
 
     def markAttendance(name):
-
         print(name)
 
     encodeListKnown = findEncodings(images)
-    #print(len(encodeListKnown))
 
     objCamera = cv2.VideoCapture(0)
     while True:
         success, img = objCamera.read()
-        # img = captureScreen()
         imgS = cv2.resize(img, (0, 0), None, 0.25, 0.25)
         imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
 
@@ -85,7 +83,7 @@ if __name__ == '__main__':
 
             if matches[matchIndex]:
                 name = filenames[matchIndex].upper()
-                #print(name)
+                print(name)
                 y1, x2, y2, x1 = faceLoc
                 y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
                 cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
@@ -111,46 +109,4 @@ if __name__ == '__main__':
         if (conn.is_connected()):
             conn.close()
             print("MySQL connection is closed")
-    '''
-
-    '''
-    #Photo Comparison
-    imgElon = face_recognition.load_image_file('images/elon-musk.jpg')
-    imgElon = cv2.cvtColor(imgElon, cv2.COLOR_BGR2RGB)
-    imgTest = face_recognition.load_image_file('images/bill-gates.jpg')
-    imgTest = cv2.cvtColor(imgTest, cv2.COLOR_BGR2RGB)
-
-    faceLoc = face_recognition.face_locations(imgElon)[0]
-    encodeElon = face_recognition.face_encodings(imgElon)[0]
-    cv2.rectangle(imgElon, (faceLoc[3], faceLoc[0]), (faceLoc[1], faceLoc[2]), (255, 0, 255), 2)
-
-    faceLocTest = face_recognition.face_locations(imgTest)[0]
-    encodeTest = face_recognition.face_encodings(imgTest)[0]
-    cv2.rectangle(imgTest, (faceLocTest[3], faceLocTest[0]), (faceLocTest[1], faceLocTest[2]), (255, 0, 255), 2)
-
-    results = face_recognition.compare_faces([encodeElon], encodeTest)
-    faceDis = face_recognition.face_distance([encodeElon], encodeTest)
-    print(results, faceDis)
-    cv2.putText(imgTest, f'{results} {round(faceDis[0], 2)}', (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
-
-    cv2.imshow('Elon Musk', imgElon)
-    cv2.imshow('Elon Test', imgTest)
-
-    objCamera = cv2.VideoCapture(0)
-    while (True):
-
-        # capture frame-by-frame
-        ret, frame = objCamera.read()
-        # Gray scale conversion
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        # display the resulting frame
-        cv2.imshow("Thermal Eye", gray)
-        # press 'q' to remove window
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    objCamera.release()
-    cv2.destroyAllWindows()
-
-    cv2.waitKey(0)
     '''
